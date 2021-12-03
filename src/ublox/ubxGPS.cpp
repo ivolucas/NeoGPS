@@ -1211,48 +1211,44 @@ bool ubloxGPS::parseNavTimeUTC( uint8_t chr )
 
 //if (chrCount == 0) trace << F( " timeUTC ");
   #ifdef UBLOX_PARSE_TIMEUTC
-    #if defined(GPS_FIX_TIME) | defined(GPS_FIX_DATE)
+    #if defined(GPS_UTC_DATE_TIME) 
       switch (chrCount) {
-
-        #if defined(GPS_FIX_DATE)
-          case 12: NMEAGPS_INVALIDATE( date );
-                   m_fix.dateTime.year   = chr; break;
-          case 13: m_fix.dateTime.year   =
-                    ((((uint16_t)chr) << 8) + m_fix.dateTime.year) % 100;
-            break;
-          case 14: m_fix.dateTime.month  = chr; break;
-          case 15: m_fix.dateTime.date   = chr; break;
-        #endif
-
-        #if defined(GPS_FIX_TIME)
-          case 16: NMEAGPS_INVALIDATE( time );
-                   m_fix.dateTime.hours   = chr; break;
-          case 17: m_fix.dateTime.minutes = chr; break;
-          case 18: m_fix.dateTime.seconds = chr; break;
-        #endif
+        case 8: case 9: case 10: case 11:
+          ((uint8_t *)&m_fix.utcDateTime_nanos) [ chrCount-8 ] = chr;
+          break;
+        case 12: NMEAGPS_INVALIDATE( date );
+                  m_fix.utcDateTime.year   = chr; break;
+        case 13: m_fix.utcDateTime.year   =
+                  ((((uint16_t)chr) << 8) + m_fix.utcDateTime.year) % 100;
+          break;
+        case 14: m_fix.utcDateTime.month  = chr; break;
+        case 15: m_fix.utcDateTime.date   = chr; break;
+        case 16: NMEAGPS_INVALIDATE( time );
+                  m_fix.utcDateTime.hours   = chr; break;
+        case 17: m_fix.utcDateTime.minutes = chr; break;
+        case 18: m_fix.utcDateTime.seconds = chr; break;
 
         case 19:
+        {
+          ublox::nav_timeutc_t::valid_t &v =
+              *((ublox::nav_timeutc_t::valid_t *)&chr);
+
+          m_fix.valid.utc_date_time = (v.UTC & v.time_of_week);
+          if (m_fix.valid.utc_date_time)
           {
-            ublox::nav_timeutc_t::valid_t &v =
-              *((ublox::nav_timeutc_t::valid_t *) &chr);
-
-            #if defined(GPS_FIX_DATE)
-              m_fix.valid.date = (v.UTC & v.time_of_week);
-            #endif
-            #if defined(GPS_FIX_TIME)
-              m_fix.valid.time = (v.UTC & v.time_of_week);
-            #endif
-
-            #if defined(GPS_FIX_TIME) & defined(GPS_FIX_DATE)
-              if (m_fix.valid.date &&
-                  (GPSTime::start_of_week() == 0) &&
-                  (GPSTime::leap_seconds    != 0))
-                GPSTime::start_of_week( m_fix.dateTime );
-            #endif
-//trace << m_fix.dateTime << F(".") << m_fix.dateTime_cs;
-//trace << ' ' << v.UTC << ' ' << v.time_of_week << ' ' << start_of_week();
+            m_fix.utcLocalTimeAtUpdate = millis();
           }
-          break;
+
+          if (m_fix.valid.utc_date_time &&
+              (GPSTime::start_of_week() == 0))
+          {
+            GPSTime::start_of_week(m_fix.utcDateTime);
+          }
+
+          //trace << m_fix.dateTime << F(".") << m_fix.dateTime_cs;
+          //trace << ' ' << v.UTC << ' ' << v.time_of_week << ' ' << start_of_week();
+        }
+        break;
       }
     #endif
   #endif

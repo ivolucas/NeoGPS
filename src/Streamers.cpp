@@ -183,7 +183,7 @@ Print & operator <<( Print &outs, const gps_fix &fix )
 
     if (someTime) {
       outs << fix.dateTime << '.';
-      uint16_t ms = fix.dateTime_ms();
+      uint16_t ms = fix.dateTime_ms;
       if (ms < 100)
         outs << '0';
       if (ms < 10)

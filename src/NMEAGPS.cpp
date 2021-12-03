@@ -1037,7 +1037,7 @@ bool NMEAGPS::parseTime(char chr)
     switch (chrCount) {
       case 0:
         NMEAGPS_INVALIDATE( time );
-        m_fix.dateTime_cs = 0;
+        m_fix.dateTime_ms = 0;
 
         if (chr != ',') {
           comma_needed( true );
@@ -1101,7 +1101,7 @@ bool NMEAGPS::parseTime(char chr)
         else if (validateChars() && !isdigit(chr))
           sentenceInvalid();
         else
-          m_fix.dateTime_cs       = (chr - '0')*10;
+          m_fix.dateTime_ms       = (chr - '0')*100;
         break;
       case 8:
         if (chr == ',')
@@ -1109,8 +1109,8 @@ bool NMEAGPS::parseTime(char chr)
         else if (validateChars() && !isdigit(chr))
           sentenceInvalid();
         else {
-          m_fix.dateTime_cs += (chr - '0');
-          if (validateFields() && (99 < m_fix.dateTime_cs))
+          m_fix.dateTime_ms += (chr - '0')*10;
+          if (validateFields() && (99 < m_fix.dateTime_ms))
             sentenceInvalid();
           else
             m_fix.valid.time = true;

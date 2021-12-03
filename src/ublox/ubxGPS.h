@@ -326,7 +326,7 @@ private:
 
           uint16_t ms;
           if (GPSTime::from_TOWms( tow, m_fix.dateTime, ms )) {
-            m_fix.dateTime_cs = ms / 10;
+            m_fix.dateTime_ms = ms;
             m_fix.valid.time = true;
             m_fix.valid.date = true;
           } else

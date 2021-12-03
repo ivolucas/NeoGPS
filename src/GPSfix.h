@@ -245,11 +245,15 @@ public:
     NeoGPS::time_t  dateTime   ; // Date and Time in one structure
   #endif
   #if defined(GPS_FIX_TIME)
-    uint8_t         dateTime_cs;         // The fix's UTC hundredths of a second
+    uint16_t        dateTime_ms;         // The fix's UTC millseconds
     uint32_t        dateTime_us() const  // The fix's UTC microseconds
-                      { return dateTime_cs * 10000UL; };
-    uint16_t        dateTime_ms() const  // The fix's UTC millseconds
-                      { return dateTime_cs * 10; };
+                      { return dateTime_ms * 1000UL; };
+  #endif
+  #if defined(GPS_UTC_DATE_TIME)
+    NeoGPS::time_t  utcDateTime; // Date and Time in one structure
+    int32_t utcDateTime_nanos;
+    unsigned long utcLocalTimeAtUpdate;
+    
   #endif
 
   //--------------------------------------------------------
@@ -356,6 +360,9 @@ public:
     #ifdef GPS_FIX_GEOID_HEIGHT
       bool geoidHeight NEOGPS_BF(1);
     #endif
+    #if defined(GPS_FIX_DATE)
+      bool utc_date_time NEOGPS_BF(1);
+    #endif
 
     // Initialize all flags to false
     void init()
@@ -449,9 +456,12 @@ public:
       dateTime.init();
     #endif
     #if defined(GPS_FIX_TIME)
-      dateTime_cs = 0;
+      dateTime_ms = 0;
     #endif
-
+    #if defined(GPS_UTC_DATE_TIME)
+      utcDateTime.init();
+      utcDateTime_nanos = 0;
+    #endif
     status = STATUS_NONE;
 
     valid.init();
@@ -484,7 +494,19 @@ public:
         dateTime.hours   = r.dateTime.hours;
         dateTime.minutes = r.dateTime.minutes;
         dateTime.seconds = r.dateTime.seconds;
-        dateTime_cs      = r.dateTime_cs;
+        dateTime_ms      = r.dateTime_ms;
+      }
+    #endif
+    #ifdef GPS_UTC_DATE_TIME
+      if (r.valid.utc_date_time) {
+        utcDateTime.date = r.utcDateTime.date;
+        utcDateTime.month = r.utcDateTime.month;
+        utcDateTime.year = r.utcDateTime.year;
+        utcDateTime.hours = r.utcDateTime.hours;
+        utcDateTime.minutes = r.utcDateTime.minutes;
+        utcDateTime.seconds = r.utcDateTime.seconds;
+        utcDateTime_nanos = r.utcDateTime_nanos;
+        utcLocalTimeAtUpdate = r.utcLocalTimeAtUpdate;
       }
     #endif
 

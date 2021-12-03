@@ -33,6 +33,7 @@
  *
  */
 
+#define GPS_UTC_DATE_TIME
 #define GPS_FIX_DATE
 #define GPS_FIX_TIME
 #define GPS_FIX_LOCATION
