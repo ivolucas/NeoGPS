@@ -49,6 +49,7 @@ namespace ublox {
         UBX_ACK_ACK      = 0x01, // Reply to CFG messages
         UBX_CFG_MSG      = 0x01, // Configure which messages to send
         UBX_CFG_RST      = 0x04, // Reset command
+        UBX_CFG_CFG      = 0x09, // Clear, Save and Load configurations
         UBX_CFG_RATE     = 0x08, // Configure message rate
         UBX_CFG_NMEA     = 0x17, // Configure NMEA protocol
         UBX_CFG_NAV5     = 0x24, // Configure navigation engine settings
@@ -185,6 +186,20 @@ namespace ublox {
           GPS_meas_rate = gr;
           nav_rate      = nr;
           time_ref      = tr;
+        }
+    }  __attribute__((packed));
+
+    struct cfg_cfg_t : msg_t {
+        uint32_t        clearMask;
+        uint32_t        saveMask;
+        uint32_t        loadMask;
+
+        cfg_cfg_t(uint32_t _clearMask, uint32_t _saveMask, uint32_t _loadMask )
+          : msg_t( UBX_CFG, UBX_CFG_CFG, UBX_MSG_LEN(*this) )
+        {
+          clearMask = _clearMask;
+          saveMask = _saveMask;
+          loadMask = _loadMask;
         }
     }  __attribute__((packed));
 
