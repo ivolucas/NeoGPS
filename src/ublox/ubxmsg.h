@@ -49,10 +49,11 @@ namespace ublox {
         UBX_ACK_ACK      = 0x01, // Reply to CFG messages
         UBX_CFG_MSG      = 0x01, // Configure which messages to send
         UBX_CFG_RST      = 0x04, // Reset command
-        UBX_CFG_CFG      = 0x09, // Clear, Save and Load configurations
         UBX_CFG_RATE     = 0x08, // Configure message rate
+        UBX_CFG_CFG      = 0x09, // Clear, Save and Load configurations
         UBX_CFG_NMEA     = 0x17, // Configure NMEA protocol
         UBX_CFG_NAV5     = 0x24, // Configure navigation engine settings
+        UBX_CFG_TP5      = 0x31, // Time Pulse Parameters
         UBX_MON_VER      = 0x04, // Monitor Receiver/Software version
         UBX_NAV_POSLLH   = 0x02, // Current Position
         UBX_NAV_STATUS   = 0x03, // Receiver Navigation Status
@@ -189,19 +190,103 @@ namespace ublox {
         }
     }  __attribute__((packed));
 
-    struct cfg_cfg_t : msg_t {
-        uint32_t        clearMask;
-        uint32_t        saveMask;
-        uint32_t        loadMask;
+    struct cfg_cfg_t : msg_t
+    {
+      uint32_t clearMask;//0x00000000
+      uint32_t saveMask;//0x0000FFFF
+      uint32_t loadMask;//0x00000000
+      struct deviceMask_t
+      {
+        bool devBBR : 1;
+        bool devFlash : 1;
+        bool devEEPROM : 1;
+        bool __not_used__ : 1;
+        bool devSpiFlash : 1;
+        bool __not_used2__ : 3;
+      } __attribute__((packed)) deviceMask;
 
-        cfg_cfg_t(uint32_t _clearMask, uint32_t _saveMask, uint32_t _loadMask )
-          : msg_t( UBX_CFG, UBX_CFG_CFG, UBX_MSG_LEN(*this) )
-        {
-          clearMask = _clearMask;
-          saveMask = _saveMask;
-          loadMask = _loadMask;
-        }
-    }  __attribute__((packed));
+      cfg_cfg_t()
+          : msg_t(UBX_CFG, UBX_CFG_CFG, UBX_MSG_LEN(*this))
+      {
+        clearMask =0x00000000;
+        saveMask =0x0000FFFF;
+        loadMask =0x00000000;
+        deviceMask.devBBR=0;
+        deviceMask.devFlash=0;
+        deviceMask.devEEPROM=1;
+        deviceMask.devSpiFlash=0;
+      }
+    } __attribute__((packed));
+
+    enum gridUtcGnss_t
+    {
+      UBX_GRID_UTC_GNSS_UTC = 0,
+      UBX_GRID_UTC_GNSS_GPS = 1,
+      UBX_GRID_UTC_GNSS_GLONASS = 2,
+      UBX_GRID_UTC_GNSS_BEIDOU = 3,
+      UBX_GRID_UTC_GNSS_GALILEO = 4
+    } __attribute__((packed));
+
+    enum syncMode_t
+    {
+      UBX_SYNC_MODE_KEEP_LOCK = 0,
+      UBX_SYNC_MODE_RESET_ON_LOSE = 1,
+    } __attribute__((packed));
+
+    struct cfg_tp5_t : msg_t
+    {
+      uint8_t tpIdx; //00
+      uint8_t version; //01
+      uint16_t reserved1; //x0000
+      int16_t antCableDelay;//x00FA
+      int16_t rfGroupDelay;//x0000
+      uint32_t freqPeriod;//x000003E8
+      uint32_t freqPeriodLock;//x000003E8
+      uint32_t pulseLenRatio;//x80000000
+      uint32_t pulseLenRatioLock;//x80000000
+      int32_t userConfigDelay;//x00000000
+      struct flags_t
+      {
+        bool active : 1;
+        bool lockGnssFreq : 1;
+        bool lockedOtherSet : 1;
+        bool isFreq : 1;
+        bool isLength : 1;
+        bool alignToTow : 1;
+        bool polarity : 1;
+        enum gridUtcGnss_t gridUtcGnss : 4;
+        enum syncMode_t syncMode : 3;
+        bool __not_used__ : 2;
+        uint16_t __not_used2_:16;
+      } __attribute__((packed)) flags;//x000000EF
+
+      cfg_tp5_t(int16_t _antCableDelay,uint32_t _freqPeriod)
+          : msg_t(UBX_CFG, UBX_CFG_TP5, UBX_MSG_LEN(*this))
+      {
+        //
+        tpIdx=0;
+        version=1;
+        reserved1=0;
+        antCableDelay = _antCableDelay;
+        rfGroupDelay =0;
+        freqPeriod = _freqPeriod;
+        freqPeriodLock = _freqPeriod;
+        pulseLenRatio = 0x80000000; //50%
+        pulseLenRatioLock = 0x80000000; //50%
+        userConfigDelay = 0;
+        flags.active = true;
+        flags.lockGnssFreq = true;
+        flags.lockedOtherSet = true;
+        flags.isFreq = true;
+        flags.isLength = false;
+        flags.alignToTow = true;
+        flags.polarity=true;
+        flags.gridUtcGnss = UBX_GRID_UTC_GNSS_GPS;
+        flags.syncMode = UBX_SYNC_MODE_KEEP_LOCK;
+
+
+      }
+    } __attribute__((packed));
 
     //  Navigation Engine Expert Settings
     enum dyn_model_t {
