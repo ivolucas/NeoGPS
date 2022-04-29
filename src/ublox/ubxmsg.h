@@ -50,6 +50,7 @@ namespace ublox {
         UBX_CFG_MSG      = 0x01, // Configure which messages to send
         UBX_CFG_RST      = 0x04, // Reset command
         UBX_CFG_RATE     = 0x08, // Configure message rate
+        UBX_CFG_PRT      = 0x00, // Port Configuration for UART
         UBX_CFG_CFG      = 0x09, // Clear, Save and Load configurations
         UBX_CFG_NMEA     = 0x17, // Configure NMEA protocol
         UBX_CFG_NAV5     = 0x24, // Configure navigation engine settings
@@ -189,6 +190,47 @@ namespace ublox {
           time_ref      = tr;
         }
     }  __attribute__((packed));
+
+    struct cfg_prt_t : msg_t
+    {
+      uint8_t portID;
+      uint8_t reserved1;
+      uint8_t txReady1;
+      uint8_t txReady2;
+      uint8_t mode1;
+      uint8_t mode2;
+      uint8_t mode3;
+      uint8_t mode4;
+      uint32_t baudRate;
+      uint8_t inProtoMask1;
+      uint8_t inProtoMask2;
+      uint8_t outProtoMask1;
+      uint8_t outProtoMask2;
+      uint8_t flags1;
+      uint8_t flags2;
+      uint16_t reserved2;
+
+      cfg_prt_t()
+          : msg_t(UBX_CFG, UBX_CFG_PRT, UBX_MSG_LEN(*this))
+      {
+        portID = 1;
+        reserved1 = 0x00;
+        txReady1 = 0x00;
+        txReady2 = 0x00;
+        mode1 = 0xD0;
+        mode2 = 0x08;
+        mode3 = 0x00;
+        mode4 = 0x00;
+        baudRate = 9600;
+        inProtoMask1 = 0x01;
+        inProtoMask2 = 0x00;
+        outProtoMask1 = 0x01;
+        outProtoMask2 = 0x00;
+        flags1 = 0x00;
+        flags2 = 0x00;
+        reserved2 = 0;
+      }
+    } __attribute__((packed));
 
     struct cfg_cfg_t : msg_t
     {
@@ -577,7 +619,11 @@ namespace ublox {
         } __attribute__((packed))
           valid;
 
-        nav_timeutc_t() : msg_t( UBX_NAV, UBX_NAV_TIMEUTC, UBX_MSG_LEN(*this) ) {};
+        nav_timeutc_t() : msg_t( UBX_NAV, UBX_NAV_TIMEUTC, UBX_MSG_LEN(*this) ) {
+          valid.time_of_week=false;
+          valid.week_number=false;
+          valid.UTC=false;
+        };
     }  __attribute__((packed));
 
     // Space Vehicle Information
